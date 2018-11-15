@@ -1,0 +1,82 @@
+//
+// Created by Logan Xu on 2018/11/15.
+//
+#include <iostream>
+#include <fstream>
+#include <stack>
+#include <map>
+#include <string>
+#include <sstream>
+#include <cstdio>
+#include <vector>
+
+using namespace std;
+
+// this line must start with # for generator to recognize
+% map<int,map<char,string>> PT;
+
+struct state{
+    int n_id;
+    char c;
+    state(int i,char ch):n_id(i),c(ch){}
+};
+struct production{
+    char VN;
+    string rhs;
+    production(char v,string s):VN(v),rhs(s){}
+};
+
+// this line must start with $ for generator to recognize
+$ vector<production> prods;
+
+int my_atoi(string cmd){
+    stringstream ss(cmd);
+    int res;
+    ss>>res;
+    return res;
+}
+
+
+int main(int argc ,char* argv[]){
+    freopen("production_sequence.txt","w",stdout);
+    if(argc == 1){
+        cout<<"please append your input file name after command!"<<endl;
+        return 0;
+    }
+    ifstream in(argv[1]);
+    if(in.fail()){
+        cout<<"fail to open file ["<<argv[1]<<"]. check your file name."<<endl;
+        return 0;
+    }
+    stack<state> s;
+    s.push(state(0,'#'));
+    char cur;
+    while((cur = in.get()) != EOF){
+        state top = s.top();
+        string cmd = PT[top.n_id][cur];
+        if(cmd[0] == 's'){
+            s.push(state(my_atoi(cmd.substr(1)),cur));
+        }else if(cmd[0] == 'r'){
+            production p = prods[my_atoi(cmd.substr(1))];
+            int len = p.rhs.length();
+            char VN = p.VN;
+            for(int i = 0;i <len ;i++)
+                s.pop();
+            int nextState = my_atoi(PT[s.top().n_id][VN]);
+            s.push(state(nextState,VN));
+            cout<<p.VN<<" -> "<<p.rhs<<endl;
+            in.unget();
+        }else if(cmd[0] == 'a'){
+            cout<<"parsing finished."<<endl;
+            break;
+        }else{
+            cout<<"you have an syntax err!"<<endl;
+            break;
+        }
+
+    }
+
+
+    return 0;
+}
+
